@@ -4,6 +4,7 @@ import wifi
 import socketpool
 import terminalio
 import displayio
+import os
 import adafruit_requests as requests
 from adafruit_matrixportal.matrixportal import MatrixPortal
 from adafruit_matrixportal.matrix import Matrix
@@ -14,7 +15,7 @@ import adafruit_display_text
 matrixportal = MatrixPortal(status_neopixel=board.NEOPIXEL, debug=True)
 
 # Wi-Fi settings and connection
-wifi.radio.connect('Tsar01-24', 'Chatham1')
+wifi.radio.connect(os.getenv("CIRCUITPY_WIFI_SSID"), os.getenv("CIRCUITPY_WIFI_PASSWORD"))
 print(f"Connected to wifi")
 print(f"My IP address is {wifi.radio.ipv4_address}")
 
@@ -30,7 +31,7 @@ text_area = label.Label(terminalio.FONT, text="", color=0xC60003)
 g.append(text_area)
 
 # Scrolling text area
-scroll_text_area = label.Label(terminalio.FONT, text="Waiting for data...", color=0xC60003)
+scroll_text_area = label.Label(terminalio.FONT, text="Waiting for data...", color=0xffffff)
 scroll_text_area.x = display.width
 scroll_text_area.y = display.height - 10
 g.append(scroll_text_area)
@@ -41,7 +42,7 @@ display.show(g)
 # Timing for API updates
 last_update_time = time.monotonic()
 update_interval = 10  # Update every 10 seconds
-API_URL ="http://pioxy.net/api"
+API_URL = os.getenv("API_URL")
 
 
 def scroll(line):
@@ -71,6 +72,9 @@ while True:
 
         # Update static text area
         message = str(data["count"][0]["value"])
+        # if message is the same as the previous message, don't update
+        if text_area.text == message:
+            continue
         formatted_message = format_number_with_commas(message)
         text_area.text = formatted_message
         text_width = text_area.bounding_box[2]
